@@ -1,0 +1,16 @@
+{
+  "id": "bathroom-break",
+  "name": "Bathroom Break",
+  "version": "1.0.0",
+  "description": "Idle agents randomly take bathroom breaks when a toilet is placed. Includes toilet sounds and all bathroom furniture.",
+  "scripts": [
+    "scripts/bathroom-break.js",
+    "scripts/toilet-sounds.js"
+  ],
+  "furnitureAssets": [
+    "assets/furniture/TOILET",
+    "assets/furniture/SINK",
+    "assets/furniture/BATHMAT",
+    "assets/furniture/BATHROOM_SHELF"
+  ]
+}

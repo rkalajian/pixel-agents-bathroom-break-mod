@@ -1,0 +1,13 @@
+{
+  "id": "BATHMAT",
+  "name": "Bath Mat",
+  "category": "decor",
+  "type": "asset",
+  "canPlaceOnWalls": false,
+  "canPlaceOnSurfaces": false,
+  "backgroundTiles": 0,
+  "width": 23,
+  "height": 21,
+  "footprintW": 1,
+  "footprintH": 1
+}

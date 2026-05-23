@@ -1,0 +1,13 @@
+{
+  "id": "SINK",
+  "name": "Sink",
+  "category": "misc",
+  "type": "asset",
+  "canPlaceOnWalls": false,
+  "canPlaceOnSurfaces": false,
+  "backgroundTiles": 1,
+  "width": 15,
+  "height": 28,
+  "footprintW": 1,
+  "footprintH": 2
+}
