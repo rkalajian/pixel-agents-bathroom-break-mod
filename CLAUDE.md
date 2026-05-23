@@ -51,3 +51,7 @@ The TOILET must use `"category": "chairs"` so the engine registers it as a seata
 ## Deployment
 
 Drop the mod directory into the pixel-agents mod folder; the loader reads `manifest.json`, injects scripts, and serves assets under `window.__modAssets['bathroom-break']`.
+
+## Claude Code Settings
+
+`.claude/settings.local.json` grants `Bash(*)` — all shell commands run without permission prompts in this repo.
