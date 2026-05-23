@@ -9,7 +9,15 @@
   const BREAK_DURATION_MAX = 90;      // seconds
   const CHECK_INTERVAL_MS = 5000;
 
-  // agentId → { originalSeatId, timer }
+  // Toilet sprite is 10×22px; tile is 16×16px.
+  // Center sprite on tile: x offset = 5 (vs tile center 8).
+  // Bottom-align with sprite (22px tall, TYPE state adds 6px offset in renderer):
+  //   render bottom = char.y + 6 → want = seatRow*16 + 22 → char.y = seatRow*16 + 16 = seatRow*16
+  //   (since seatRow = toilet.row+1, seatRow*16 = toilet.row*16+16)
+  const TOILET_SEAT_X_OFFSET = 5; // center on 10px sprite (vs default tile center 8)
+  const TOILET_SEAT_Y_OFFSET = 0; // seatRow*16 + 0 (default fr gives seatRow*16 + 8)
+
+  // agentId → { originalSeatId, timer, positioned }
   const agentsOnBreak = new Map();
 
   function engine() {
@@ -26,6 +34,28 @@
       if (seat && !seat.assigned) return toilet.uid;
     }
     return null;
+  }
+
+  function applyToiletPosition(agentId, toiletSeatId, eng) {
+    let attempts = 0;
+    const poller = setInterval(() => {
+      const char = eng.characters.get(agentId);
+      if (!char || char.seatId !== toiletSeatId || ++attempts > 60) {
+        clearInterval(poller);
+        return;
+      }
+      if (char.state !== 'walk') {
+        const seat = eng.seats.get(toiletSeatId);
+        if (seat) {
+          char.x = seat.seatCol * 16 + TOILET_SEAT_X_OFFSET;
+          char.y = seat.seatRow * 16 + TOILET_SEAT_Y_OFFSET;
+        }
+        clearInterval(poller);
+        const breakData = agentsOnBreak.get(agentId);
+        if (breakData) breakData.positioned = true;
+        document.dispatchEvent(new CustomEvent('bathroom-break:seated', { detail: { agentId } }));
+      }
+    }, 500);
   }
 
   function endBreak(agentId, originalSeatId) {
@@ -50,7 +80,7 @@
 
   function tryStartBreak(agentId, eng) {
     const char = eng.characters.get(agentId);
-    if (!char || char.isActive || char.isSubagent) return;
+    if (!char || char.isActive) return;
     if (char.state !== 'idle') return;
 
     const toiletSeatId = pickFreeToiletSeatId(eng);
@@ -68,7 +98,9 @@
     console.log(`[bathroom-break] Agent ${agentId} → toilet for ${Math.round(duration)}s`);
 
     const timer = setTimeout(() => endBreak(agentId, originalSeatId), duration * 1000);
-    agentsOnBreak.set(agentId, { originalSeatId, timer });
+    agentsOnBreak.set(agentId, { originalSeatId, timer, positioned: false });
+
+    applyToiletPosition(agentId, toiletSeatId, eng);
   }
 
   function tick() {
@@ -103,7 +135,7 @@
         continue;
       }
 
-      if (char.isActive || char.isSubagent) continue;
+      if (char.isActive) continue;
       if (char.state !== 'idle') continue;
 
       if (Math.random() < breakProb) {
