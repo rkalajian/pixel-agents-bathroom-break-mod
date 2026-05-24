@@ -20,6 +20,12 @@ A mod for [pixel-agents](https://github.com/rkalajian/pixel-agents) that gives i
 | Bathmat | Decor | Decorative |
 | Bathroom Shelf | Wall | Mountable on walls |
 
+## Mod compatibility
+
+### pixel-agents-bloody-chunks-mod
+
+When the [bloody-chunks mod](../pixel-agents-bloody-chunks-mod) is also installed, agents deleted while sitting on a toilet will explode in **brown** instead of red. Enabled automatically; no setup required.
+
 ## Manual trigger
 
 ```js

@@ -161,7 +161,11 @@
     return false;
   }
 
-  window.__bathroomBreakMod = { forceBathroomBreak };
+  function isAgentOnToilet(agentId) {
+    return agentsOnBreak.has(agentId);
+  }
+
+  window.__bathroomBreakMod = { forceBathroomBreak, isAgentOnToilet };
 
   // Wait for engine to be ready
   const ready = setInterval(() => {
