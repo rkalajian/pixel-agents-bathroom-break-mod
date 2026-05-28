@@ -6,11 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A mod for **pixel-agents** — a browser-based agent simulation. The mod adds bathroom break behavior to idle agents and toilet sound effects. No build step, no dependencies, no tests. Plain browser JS loaded by the pixel-agents mod loader.
 
-## Mod Loader Contract
+## Engine Access
 
-The mod loader provides:
-- `window.__pixelAgentsJr.current` — live engine reference (may be null on startup; poll until ready)
-- `window.__modAssets[modId]` — base URL for this mod's assets
+pixel-agents v1.3.0 has no script mod loader. The engine is exposed via a one-line patch to the compiled webview JS:
+
+**File**: `dist/webview/assets/index-BUrEakFE.js`  
+**Patch**: append `window.__pixelAgentsJr=Jr;` immediately after `Jr={current:null}` (the module-level engine ref).
+
+`window.__pixelAgentsJr.current` is the live engine (null until first use; `bathroom-break.js` polls until ready).
+
+`window.__modAssets` does NOT exist — `toilet-sounds.js` falls back to `'./assets'` (relative to webview root, which resolves to the extension's `dist/webview/assets/`).
 
 The engine exposes: `characters` (Map<id, char>), `seats` (Map<uid, seat>), `layout.furniture[]`, `reassignSeat(agentId, seatId)`, `findFreeSeat()`.
 
@@ -27,12 +32,10 @@ Two independent IIFEs, each self-contained:
 - Break state tracked in module-level `Map agentsOnBreak` (agentId → `{ originalSeatId, timer }`)
 - Exposes `window.__bathroomBreakMod.forceBathroomBreak()` for manual triggering
 
-**`scripts/toilet-sounds.js`** — canvas-interception audio trigger
-- Wraps `CanvasRenderingContext2D.prototype.drawImage` to detect sprite positions each frame
-- Toilet sprite matched by fixed aspect ratio (10:22, `dh * 10 === dw * 22`)
-- Character sprites matched by 2:1 height:width ratio
-- Proximity check scaled by zoom factor (`PROXIMITY * t.scale`)
-- Drives `requestAnimationFrame` loop; `occupied` flag prevents repeat triggers on same sit
+**`scripts/toilet-sounds.js`** — event-driven audio
+- Listens for `bathroom-break:seated` custom DOM event (dispatched by `bathroom-break.js`)
+- Loads MP3s from `./assets/furniture/TOILET/sounds/` (relative to webview root) via Web Audio API
+- Plays random buffer on each event; 4s cooldown prevents stacking
 
 ## Furniture Assets
 
@@ -48,9 +51,30 @@ The TOILET must use `"category": "chairs"` so the engine registers it as a seata
 | `BREAK_DURATION_MIN/MAX` | 30–90s | Random break duration |
 | `CHECK_INTERVAL_MS` | 5000 | Tick frequency |
 
-## Deployment
+## Installation (pixel-agents v1.3.0 — no mod loader)
 
-Drop the mod directory into the pixel-agents mod folder; the loader reads `manifest.json`, injects scripts, and serves assets under `window.__modAssets['bathroom-break']`.
+Four manual steps, must redo after extension update:
+
+1. **Furniture assets** — `~/.pixel-agents/config.json`:
+   ```json
+   { "externalAssetDirectories": ["/path/to/pixel-agents-bathroom-break-mod"] }
+   ```
+   Extension appends `assets/furniture` to each dir; TOILET/SINK/BATHMAT/BATHROOM_SHELF appear in palette.
+
+2. **Engine exposure** — patch `dist/webview/assets/index-BUrEakFE.js`:
+   Find `Jr={current:null}` and append `window.__pixelAgentsJr=Jr;` immediately after.
+   (`Jr` is the module-level engine ref; variable name may change across extension versions.)
+
+3. **Sound files** — copy `assets/furniture/TOILET/sounds/*.mp3` to `dist/webview/assets/furniture/TOILET/sounds/`.
+
+4. **Script injection** — add to `dist/webview/index.html` before `</head>`:
+   ```html
+   <script type="module" src="./assets/bathroom-break.js"></script>
+   <script type="module" src="./assets/toilet-sounds.js"></script>
+   ```
+   Also copy `scripts/bathroom-break.js` → `dist/webview/assets/bathroom-break.js` and same for `toilet-sounds.js`.
+
+The `dist/webview/` root is inside the VS Code extension directory (e.g. `~/.var/app/com.visualstudio.code/data/vscode/extensions/pablodelucca.pixel-agents-<version>/`).
 
 ## Claude Code Settings
 

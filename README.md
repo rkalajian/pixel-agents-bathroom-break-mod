@@ -36,7 +36,62 @@ Sends the first eligible idle agent to the toilet immediately. Returns `false` i
 
 ## Installation
 
-Drop the `bathroom-break/` folder into your pixel-agents mods directory. The mod loader handles the rest.
+pixel-agents v1.3.0 has no script mod loader. Manual installation required; redo after extension updates.
+
+**1. Register furniture assets**
+
+Create or edit `~/.pixel-agents/config.json`:
+
+```json
+{
+  "externalAssetDirectories": ["/path/to/pixel-agents-bathroom-break-mod"]
+}
+```
+
+This makes TOILET, SINK, BATHMAT, and BATHROOM_SHELF appear in the furniture palette.
+
+**2. Find the extension directory**
+
+```
+~/.var/app/com.visualstudio.code/data/vscode/extensions/pablodelucca.pixel-agents-<version>/dist/webview/
+```
+
+(On macOS/Windows the path differs; check VS Code extension install location.)
+
+**3. Expose the engine**
+
+In `dist/webview/assets/index-BUrEakFE.js` (filename may change across versions), find:
+
+```
+Jr={current:null}
+```
+
+Append `window.__pixelAgentsJr=Jr;` immediately after that line. The variable name `Jr` may differ — search for `{current:null},` followed by `new Ir;function` to locate it.
+
+**4. Copy sounds**
+
+```
+cp assets/furniture/TOILET/sounds/*.mp3 \
+  <extension>/dist/webview/assets/furniture/TOILET/sounds/
+```
+
+**5. Copy scripts and patch index.html**
+
+```
+cp scripts/bathroom-break.js <extension>/dist/webview/assets/
+cp scripts/toilet-sounds.js  <extension>/dist/webview/assets/
+```
+
+Add before `</head>` in `dist/webview/index.html`:
+
+```html
+<script type="module" src="./assets/bathroom-break.js"></script>
+<script type="module" src="./assets/toilet-sounds.js"></script>
+```
+
+**6. Reload Pixel Agents**
+
+Reload the panel in VS Code (close and reopen, or run `Developer: Reload Window`).
 
 ## Notes
 
