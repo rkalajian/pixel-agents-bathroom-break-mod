@@ -36,7 +36,9 @@ Sends the first eligible idle agent to the toilet immediately. Returns `false` i
 
 ## Installation
 
-pixel-agents v1.3.0 has no script mod loader. Manual installation required; redo after extension updates.
+This mod requires [pixel-agents-mod-loader](https://github.com/rkalajian/pixel-agents-mod-loader) to be installed. Follow the mod-loader installation instructions first.
+
+The mod should live in `~/.pixel-agents/mods/bathroom-break/`.
 
 **1. Register furniture assets**
 
