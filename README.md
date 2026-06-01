@@ -36,64 +36,17 @@ Sends the first eligible idle agent to the toilet immediately. Returns `false` i
 
 ## Installation
 
-This mod requires [pixel-agents-mod-loader](https://github.com/rkalajian/pixel-agents-mod-loader) to be installed. Follow the mod-loader installation instructions first.
+pixel-agents has a built-in mod loader that discovers mods from `~/.claude/pixel-agents-mods/`.
 
-The mod should live in `~/.pixel-agents/mods/bathroom-break/`.
+**1. Place the mod**
 
-**1. Register furniture assets**
+Clone or copy this repo to `~/.claude/pixel-agents-mods/bathroom-break/`.
 
-Create or edit `~/.pixel-agents/config.json`:
-
-```json
-{
-  "externalAssetDirectories": ["/path/to/pixel-agents-bathroom-break-mod"]
-}
-```
-
-This makes TOILET, SINK, BATHMAT, and BATHROOM_SHELF appear in the furniture palette.
-
-**2. Find the extension directory**
-
-```
-~/.var/app/com.visualstudio.code/data/vscode/extensions/pablodelucca.pixel-agents-<version>/dist/webview/
-```
-
-(On macOS/Windows the path differs; check VS Code extension install location.)
-
-**3. Expose the engine**
-
-In `dist/webview/assets/index-BUrEakFE.js` (filename may change across versions), find:
-
-```
-Jr={current:null}
-```
-
-Append `window.__pixelAgentsJr=Jr;` immediately after that line. The variable name `Jr` may differ — search for `{current:null},` followed by `new Ir;function` to locate it.
-
-**4. Copy sounds**
-
-```
-cp assets/furniture/TOILET/sounds/*.mp3 \
-  <extension>/dist/webview/assets/furniture/TOILET/sounds/
-```
-
-**5. Copy scripts and patch index.html**
-
-```
-cp scripts/bathroom-break.js <extension>/dist/webview/assets/
-cp scripts/toilet-sounds.js  <extension>/dist/webview/assets/
-```
-
-Add before `</head>` in `dist/webview/index.html`:
-
-```html
-<script type="module" src="./assets/bathroom-break.js"></script>
-<script type="module" src="./assets/toilet-sounds.js"></script>
-```
-
-**6. Reload Pixel Agents**
+**2. Reload Pixel Agents**
 
 Reload the panel in VS Code (close and reopen, or run `Developer: Reload Window`).
+
+That's it. The extension auto-loads scripts, furniture assets, and sounds from the mod directory. No patching, no file copying, no config edits required. After a pixel-agents extension update, just reload.
 
 ## Notes
 
