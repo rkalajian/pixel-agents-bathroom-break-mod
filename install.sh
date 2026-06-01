@@ -57,20 +57,42 @@ fi
 # ── 4. Patch index-BUrEakFE.js (expose engine as window.__pixelAgentsJr) ─────
 
 APP_JS="$ASSETS/index-BUrEakFE.js"
-ENGINE_MARKER='__pixelAgentsJr'
 
-if grep -q "$ENGINE_MARKER" "$APP_JS"; then
+# Fix old bad patch: window.__pixelAgentsJr was incorrectly inserted inside a var declaration.
+# Detect by checking if it appears between Jr= and Yr= (comma-separated declarators).
+if grep -q 'Jr={current:null},window.__pixelAgentsJr=Jr,' "$APP_JS"; then
+  echo "  ⚠ Removing bad engine patch (was inside var declaration)..."
+  node - "$APP_JS" << 'EOF'
+const fs = require('fs');
+const path = process.argv[2];
+let js = fs.readFileSync(path, 'utf8');
+js = js.replace(/Jr=\{current:null\},window\.__pixelAgentsJr=Jr,/g, 'Jr={current:null},');
+fs.writeFileSync(path, js);
+EOF
+fi
+
+# Apply correct patch: window.__pixelAgentsJr=Jr; as a separate statement after the var declaration.
+if grep -q 'window.__pixelAgentsJr=Jr;' "$APP_JS"; then
   echo "  ✓ App JS already patched"
 else
-  # Jr={current:null} is the engine container; expose it on window
-  sed -i.bak 's/Jr={current:null}/Jr={current:null},window.__pixelAgentsJr=Jr/' "$APP_JS"
-  if grep -q "$ENGINE_MARKER" "$APP_JS"; then
-    rm -f "$APP_JS.bak"
+  node - "$APP_JS" << 'EOF'
+const fs = require('fs');
+const path = process.argv[2];
+let js = fs.readFileSync(path, 'utf8');
+// Jr={current:null} is inside a var declaration; inject exposure AFTER the semicolon that closes it.
+const patched = js.replace(/(Jr=\{current:null\}[^;]*;)/, '$1window.__pixelAgentsJr=Jr;');
+if (patched === js) {
+  console.error("ERROR: Pattern 'Jr={current:null}' not found in app JS.");
+  console.error("The extension may have updated. Check dist/webview/assets/ for a new index-*.js.");
+  process.exit(1);
+}
+fs.writeFileSync(path, patched);
+EOF
+  if [ $? -ne 0 ]; then exit 1; fi
+  if grep -q 'window.__pixelAgentsJr=Jr;' "$APP_JS"; then
     echo "  ✓ App JS patched (engine exposed as window.__pixelAgentsJr)"
   else
-    mv "$APP_JS.bak" "$APP_JS"
-    echo "ERROR: App JS patch failed — engine container 'Jr={current:null}' not found." >&2
-    echo "The extension may have updated. Check dist/webview/assets/ for a new index-*.js." >&2
+    echo "ERROR: App JS patch verification failed." >&2
     exit 1
   fi
 fi
