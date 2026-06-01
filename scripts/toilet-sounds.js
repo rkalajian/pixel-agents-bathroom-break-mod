@@ -15,6 +15,7 @@
   let buffers = [];
   let soundsReady = false;
   let lastPlayedAt = 0;
+  let lastSoundDurationMs = 0;
 
   async function loadSounds() {
     audioCtx = new AudioContext();
@@ -39,6 +40,7 @@
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const src = audioCtx.createBufferSource();
     src.buffer = buffers[Math.floor(Math.random() * buffers.length)];
+    lastSoundDurationMs = src.buffer.duration * 1000;
     src.connect(audioCtx.destination);
     src.start(0);
   }
@@ -52,6 +54,10 @@
   document.addEventListener('keydown', ensureAudioReady, { once: false });
 
   document.addEventListener('bathroom-break:seated', playRandom);
+
+  window.__toiletSounds = {
+    getLastSoundDurationMs: () => lastSoundDurationMs
+  };
 
   loadSounds().catch(() => {});
   console.log('[toilet-sounds] Mod loaded — waiting for bathroom-break:seated events');

@@ -95,13 +95,30 @@
     if (!after || after.seatId !== toiletSeatId) return;
 
     const duration = BREAK_DURATION_MIN + Math.random() * (BREAK_DURATION_MAX - BREAK_DURATION_MIN);
-    console.log(`[bathroom-break] Agent ${agentId} → toilet for ${Math.round(duration)}s`);
+    console.log(`[bathroom-break] Agent ${agentId} → toilet`);
 
+    // Initial timer (will be adjusted when seated + sound plays)
     const timer = setTimeout(() => endBreak(agentId, originalSeatId), duration * 1000);
     agentsOnBreak.set(agentId, { originalSeatId, timer, positioned: false });
 
     applyToiletPosition(agentId, toiletSeatId, eng);
   }
+
+  document.addEventListener('bathroom-break:seated', (e) => {
+    const agentId = e.detail.agentId;
+    const breakData = agentsOnBreak.get(agentId);
+    if (!breakData) return;
+
+    // Adjust timer based on sound duration + 1s
+    const soundDurationMs = window.__toiletSounds?.getLastSoundDurationMs?.() ?? 0;
+    const totalDurationMs = soundDurationMs + 1000; // +1s after sound
+
+    if (soundDurationMs > 0) {
+      clearTimeout(breakData.timer);
+      breakData.timer = setTimeout(() => endBreak(agentId, breakData.originalSeatId), totalDurationMs);
+      console.log(`[bathroom-break] Agent ${agentId} leaving in ${Math.round(totalDurationMs / 1000)}s (sound ${Math.round(soundDurationMs / 1000)}s + 1s)`);
+    }
+  });
 
   function tick() {
     const eng = engine();

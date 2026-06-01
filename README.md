@@ -6,7 +6,7 @@ A mod for [pixel-agents](https://github.com/rkalajian/pixel-agents) that gives i
 
 - Idle agents randomly walk to the toilet (~once every 5 minutes per agent)
 - Agents pixel-align to the toilet seat on arrival
-- Agents stay 30–90 seconds, then return to their original seat
+- Agents stay for the duration of the toilet sound plus 1 second, then return to their original seat
 - If an agent becomes active mid-break, they return immediately
 - Random toilet sounds play when a character sits down
 - Place a toilet to enable the behavior; remove it to disable
