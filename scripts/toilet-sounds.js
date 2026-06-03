@@ -2,11 +2,18 @@
   'use strict';
 
   const MOD_ID = 'bathroom-break';
-  const SOUND_DIR = (window.__modAssets?.[MOD_ID] ?? './assets') + '/furniture/TOILET/sounds/';
+  // import.meta.url gives the webview-resource URI of this script file.
+  // Sounds live at ./furniture/TOILET/sounds/ relative to this script.
+  // Using import.meta.url avoids the window.location base URL mismatch in VS Code webviews.
+  const SOUND_DIR = window.__modAssets?.[MOD_ID]
+    ? window.__modAssets[MOD_ID] + '/furniture/TOILET/sounds/'
+    : new URL('./furniture/TOILET/sounds/', import.meta.url).href;
   const SOUND_FILES = [
     'ElevenLabs_short_poop_fart.mp3',
     'ElevenLabs_very_low,_deep,_bassy_and_long_fart.mp3',
     'ElevenLabs_Comedy_scene_extreme_explosive_diarrhea_gushing_and_big_wet_farting_sounds.mp3',
+    'fart-hard-wet-zeroframe-audio-1-00-01.mp3',
+    'fart-raspy-flab-om-fx-1-00-02.mp3',
   ];
 
   const COOLDOWN_MS = 4000;

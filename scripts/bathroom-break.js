@@ -109,15 +109,19 @@
     const breakData = agentsOnBreak.get(agentId);
     if (!breakData) return;
 
-    // Adjust timer based on sound duration + 1s
-    const soundDurationMs = window.__toiletSounds?.getLastSoundDurationMs?.() ?? 0;
-    const totalDurationMs = soundDurationMs + 1000; // +1s after sound
-
-    if (soundDurationMs > 0) {
-      clearTimeout(breakData.timer);
-      breakData.timer = setTimeout(() => endBreak(agentId, breakData.originalSeatId), totalDurationMs);
-      console.log(`[bathroom-break] Agent ${agentId} leaving in ${Math.round(totalDurationMs / 1000)}s (sound ${Math.round(soundDurationMs / 1000)}s + 1s)`);
-    }
+    // Defer so toilet-sounds.js (registered after us) can run playRandom() first,
+    // then read the duration of the sound that was just selected.
+    setTimeout(() => {
+      const currentBreakData = agentsOnBreak.get(agentId);
+      if (!currentBreakData) return;
+      const soundDurationMs = window.__toiletSounds?.getLastSoundDurationMs?.() ?? 0;
+      const totalDurationMs = soundDurationMs + 1000; // +1s after sound finishes
+      if (soundDurationMs > 0) {
+        clearTimeout(currentBreakData.timer);
+        currentBreakData.timer = setTimeout(() => endBreak(agentId, currentBreakData.originalSeatId), totalDurationMs);
+        console.log(`[bathroom-break] Agent ${agentId} leaving in ${Math.round(totalDurationMs / 1000)}s (sound ${Math.round(soundDurationMs / 1000)}s + 1s)`);
+      }
+    }, 0);
   });
 
   function tick() {
